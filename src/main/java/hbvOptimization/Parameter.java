@@ -1,4 +1,4 @@
-package domain;
+package hbvOptimization;
 
 public class Parameter {
 	private String name;
