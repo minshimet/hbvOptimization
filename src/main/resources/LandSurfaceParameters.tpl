@@ -1,0 +1,11 @@
+Type    no.  INTER_MAX    EPOT_PAR     WET_PER_CORR   ACC_TEMP   MELT_TEMP    SNOW_MELT_RATE   ICE_MELT_RATE    FREEZE_EFF   MAX_REL   ALBEDO  CV_SNOW
+LANDSUR   0  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   1  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   2  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   3  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   4  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   5  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   6  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   7  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   8  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
+LANDSUR   9  #intf#   #epof#   0.8            0.0        #mtef#   #smef#       #imrg#       0.01         0.08      0.90    0.0
