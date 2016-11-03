@@ -83,7 +83,27 @@ public class HbvOptimization extends AbstractProblem {
 	}
 
 	private double evaluteIce() {
-		return 0;
+		Hashtable<String, Double> iceObs = loadValues(ice_obs_file);
+		Hashtable<String, Double> iceMod = loadValues(ice_model_file);
+		String date;
+		Set<String> keys = iceMod.keySet();
+		Iterator<String> itr = keys.iterator();
+		double[][] pairs=new double[iceMod.size()][2];
+		int i=0;
+		while (itr.hasNext()) {
+			date = itr.next();
+			if (iceObs.get(date)==null || iceObs.get(date)==-9999) {
+				//if no observation data found that set both same value
+				pairs[i][1]=iceMod.get(date);
+				pairs[i][0]=pairs[i][1];
+				continue;
+			} else {
+				pairs[i][1]=iceMod.get(date);
+				pairs[i][0]=iceObs.get(date);
+			}
+			i++;
+		}
+		return calculateRMSE(pairs);
 	}
 
 	private double evaluteRunOff() {
