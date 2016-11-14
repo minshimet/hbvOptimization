@@ -9,7 +9,7 @@ import org.moeaframework.core.variable.EncodingUtils;
 public class RunHbvOptimization {
 	public static void main(String[] args) {
 		int evalutationTimes=100;
-		if (args!=null && args[0]!=null) {
+		if (args!=null) {
 			evalutationTimes=Integer.parseInt(args[0]);
 		}
 		NondominatedPopulation result = new Executor().withAlgorithm("NSGAII").withProblemClass(HbvOptimization.class)

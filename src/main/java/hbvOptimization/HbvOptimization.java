@@ -76,6 +76,7 @@ public class HbvOptimization extends AbstractProblem {
 		double[] x = EncodingUtils.getReal(solution);
 		for (int i = 0; i < getNumberOfVariables(); i++) {
 			hbvParameters.get(i).setValue(x[i]);
+			System.out.print(x[i]+",");
 		}
 		generateParfile("GeneralParametersDaily");
 		generateParfile("HbvSoilParameters");
@@ -88,7 +89,7 @@ public class HbvOptimization extends AbstractProblem {
 		double ic=evaluteIce();
 		solution.setObjective(0, rf);
 		solution.setObjective(1, ic);
-		System.out.println("evaluationTimes "+evaluationTimes+" "+rf+", "+ic);
+		System.out.println("evaluationTimes "+evaluationTimes+": "+rf+", "+ic);
 		evaluationTimes++;
 	}
 
