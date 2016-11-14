@@ -36,9 +36,9 @@ public class Utils {
 			File file = new File(filename);
 
 			if (file.delete()) {
-				System.out.println("Old par file " + file.getName() + " is deleted!");
+				//System.out.println("Old par file " + file.getName() + " is deleted!");
 			} else {
-				System.out.println("Delete file "+ file.getName() +" operation is failed.");
+				//System.out.println("Delete file "+ file.getName() +" operation is failed.");
 			}
 
 		} catch (Exception e) {

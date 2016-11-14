@@ -23,10 +23,12 @@ public class HbvOptimization extends AbstractProblem {
 	String tplFileFold;
 	String parFileFold;
 	String shellCommand;
+	String shell_command_calculate;
+	int evaluationTimes = 0;
 
 	public HbvOptimization() {
 		super(14, 2);
-		Properties p = Utils.loadProperties("/disk1/git/hbvOptimization/src/main/resources/hbv.properties");
+		Properties p = Utils.loadProperties("/home/ubuntu/lihong/hbv.properties");
 		if (p == null)
 			System.exit(1);
 
@@ -38,6 +40,7 @@ public class HbvOptimization extends AbstractProblem {
 		tplFileFold = p.getProperty("tplfile_fold");
 		parFileFold = p.getProperty("target_parfile_fold");
 		shellCommand = p.getProperty("shell_command");
+		shell_command_calculate = p.getProperty("shell_command_calculate");
 	}
 
 	private static Hashtable<Integer, Parameter> loadParameters(String parafile) {
@@ -77,91 +80,116 @@ public class HbvOptimization extends AbstractProblem {
 		generateParfile("GeneralParametersDaily");
 		generateParfile("HbvSoilParameters");
 		generateParfile("LandSurfaceParameters");
+		//Remove old model file
+		Utils.removeFile(runoff_model_file);
+		Utils.removeFile(ice_model_file);
 		executeHbvModel();
-		solution.setObjective(0, evaluteRunOff());
-		solution.setObjective(1, evaluteIce());
+		double rf=evaluteRunOff();
+		double ic=evaluteIce();
+		solution.setObjective(0, rf);
+		solution.setObjective(1, ic);
+		System.out.println("evaluationTimes "+evaluationTimes+" "+rf+", "+ic);
+		evaluationTimes++;
 	}
 
 	private double evaluteIce() {
-		Hashtable<String, Double> iceObs = loadValues(ice_obs_file);
-		Hashtable<String, Double> iceMod = loadValues(ice_model_file);
-		String date;
-		Set<String> keys = iceMod.keySet();
-		Iterator<String> itr = keys.iterator();
-		double[][] pairs=new double[iceMod.size()][2];
-		int i=0;
-		while (itr.hasNext()) {
-			date = itr.next();
-			if (iceObs.get(date)==null || iceObs.get(date)==-9999) {
-				//if no observation data found that set both same value
-				pairs[i][1]=iceMod.get(date);
-				pairs[i][0]=pairs[i][1];
-				continue;
-			} else {
-				pairs[i][1]=iceMod.get(date);
-				pairs[i][0]=iceObs.get(date);
+		try {
+			Hashtable<String, Double> iceObs = loadValues(ice_obs_file);
+			Hashtable<String, Double> iceMod = loadValues(ice_model_file);
+			String date;
+			Set<String> keys = iceMod.keySet();
+			Iterator<String> itr = keys.iterator();
+			double[][] pairs = new double[iceMod.size()][2];
+			int i = 0;
+			while (itr.hasNext()) {
+				date = itr.next();
+				if (!date.contains("0901/1200")) {
+					continue;
+				}
+				String obsKey = date.substring(0, 4);
+				if (iceObs.get(obsKey) == null || iceObs.get(obsKey) == -9999 || iceMod.get(date) == -9999) {
+					// if no observation data found that set both same value
+					pairs[i][1] = iceMod.get(date);
+					pairs[i][0] = pairs[i][1];
+					continue;
+				} else {
+					pairs[i][1] = iceMod.get(date) / 1000;
+					pairs[i][0] = iceObs.get(obsKey);
+				}
+				i++;
 			}
-			i++;
+			return calculateRMSE(pairs);
+		} catch (Exception e) {
+			return 10000000;
 		}
-		return calculateRMSE(pairs);
 	}
 
 	private double evaluteRunOff() {
-		Hashtable<String, Double> runoffObs = loadValues(runoff_obs_file);
-		Hashtable<String, Double> runoffMod = loadValues(runoff_model_file);
-		String date;
-		Set<String> keys = runoffMod.keySet();
-		Iterator<String> itr = keys.iterator();
-		double[][] pairs=new double[runoffMod.size()][2];
-		int i=0;
-		while (itr.hasNext()) {
-			date = itr.next();
-			if (runoffObs.get(date)==null || runoffObs.get(date)==-9999) {
-				//if no observation data found that set both same value
-				pairs[i][1]=runoffMod.get(date);
-				pairs[i][0]=pairs[i][1];
-				continue;
-			} else {
-				pairs[i][1]=runoffMod.get(date);
-				pairs[i][0]=runoffObs.get(date);
+		try {
+			Hashtable<String, Double> runoffObs = loadValues(runoff_obs_file);
+			Hashtable<String, Double> runoffMod = loadValues(runoff_model_file);
+			String date;
+			Set<String> keys = runoffMod.keySet();
+			Iterator<String> itr = keys.iterator();
+			double[][] pairs = new double[runoffMod.size()][2];
+			int i = 0;
+			while (itr.hasNext()) {
+				date = itr.next();
+				if (runoffObs.get(date) == null || runoffObs.get(date) == -9999) {
+					// if no observation data found that set both same value
+					pairs[i][1] = runoffMod.get(date);
+					pairs[i][0] = pairs[i][1];
+					continue;
+				} else {
+					pairs[i][1] = runoffMod.get(date);
+					pairs[i][0] = runoffObs.get(date);
+				}
+				i++;
 			}
-			i++;
+			return calculateRMSE(pairs);
+		} catch (Exception e) {
+			return 10000000;
 		}
-		return calculateRMSE(pairs);
 	}
-	
+
 	private double calculateRMSE(double[][] pairValues) {
 		double sum_sq = 0;
 		double err;
-		for (int i = 0; i < pairValues.length; ++i)
-		{
+		for (int i = 0; i < pairValues.length; ++i) {
 			err = pairValues[i][0] - pairValues[i][1];
-	        sum_sq += (err * err);
+			sum_sq += (err * err);
 		}
-		return (double)Math.sqrt(sum_sq/(pairValues.length));
+		return (double) Math.sqrt(sum_sq / (pairValues.length));
 	}
 
-	private Hashtable<String, Double> loadValues(String filename) {
+	private Hashtable<String, Double> loadValues(String filename) throws NumberFormatException, IOException {
 		Hashtable<String, Double> values = new Hashtable<String, Double>();
-		try {
-			BufferedReader br = new BufferedReader(new FileReader(filename));
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				String[] value = line.split("\\s+");
-				values.put(value[0], Double.parseDouble(value[1]));
-			}
-			br.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		BufferedReader br = new BufferedReader(new FileReader(filename));
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			String[] value = line.split("\\s+");
+			values.put(value[0], Double.parseDouble(value[1]));
 		}
+		br.close();
+
 		return values;
 	}
 
 	private void executeHbvModel() {
+		// run hbv model
 		String command = "sh " + shellCommand;
 		try {
 			Process proc = Runtime.getRuntime().exec(command);
 			BufferedReader read = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+			try {
+				proc.waitFor();
+			} catch (InterruptedException e) {
+				System.out.println(e.getMessage());
+			}
+			// calculate model
+			command = "sh " + shell_command_calculate;
+			proc = Runtime.getRuntime().exec(command);
+			read = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 			try {
 				proc.waitFor();
 			} catch (InterruptedException e) {
