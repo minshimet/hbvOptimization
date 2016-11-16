@@ -36,14 +36,14 @@ public class HbvOptimization extends AbstractProblem {
 		runoff_model_file = p.getProperty("runoff_model_file");
 		ice_obs_file = p.getProperty("ice_obs_file");
 		ice_model_file = p.getProperty("ice_model_file");
-		hbvParameters = loadParameters(p.getProperty("parameter_file"));
+		hbvParameters = loadParameters(p.getProperty("parameter_range_file"));
 		tplFileFold = p.getProperty("tplfile_fold");
 		parFileFold = p.getProperty("target_parfile_fold");
 		shellCommand = p.getProperty("shell_command");
 		shell_command_calculate = p.getProperty("shell_command_calculate");
 	}
 
-	private static Hashtable<Integer, Parameter> loadParameters(String parafile) {
+	public static Hashtable<Integer, Parameter> loadParameters(String parafile) {
 		Hashtable<Integer, Parameter> parameters = new Hashtable<Integer, Parameter>();
 		try {
 			// Construct BufferedReader from FileReader
@@ -78,9 +78,9 @@ public class HbvOptimization extends AbstractProblem {
 			hbvParameters.get(i).setValue(x[i]);
 			System.out.print(x[i]+",");
 		}
-		generateParfile("GeneralParametersDaily");
-		generateParfile("HbvSoilParameters");
-		generateParfile("LandSurfaceParameters");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "GeneralParametersDaily");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "HbvSoilParameters");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "LandSurfaceParameters");
 		//Remove old model file
 		Utils.removeFile(runoff_model_file);
 		Utils.removeFile(ice_model_file);
@@ -204,7 +204,7 @@ public class HbvOptimization extends AbstractProblem {
 		}
 	}
 
-	private void generateParfile(String filename) {
+	public static void generateParfile(Hashtable<Integer, Parameter> hbvParameters, String tplFileFold, String parFileFold, String filename) {
 		Utils.removeFile(parFileFold + filename + ".par");
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(tplFileFold + filename + ".tpl"));

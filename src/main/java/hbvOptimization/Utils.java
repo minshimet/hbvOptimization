@@ -1,7 +1,10 @@
 package hbvOptimization;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +49,14 @@ public class Utils {
 			e.printStackTrace();
 
 		}
+	}
+	
+	public static String readFirstLineFromFile(String file) throws FileNotFoundException, IOException {
+		String line;
+	    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		    line = br.readLine();
+		}
+		return line;
 	}
 	
 	public static void appendToFile(String text, String fileName){
