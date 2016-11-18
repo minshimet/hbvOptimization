@@ -87,8 +87,6 @@ public class HbvOptimization extends AbstractProblem {
 		executeHbvModel();
 		double rf=evaluteRunOff();
 		double ic=evaluteIce();
-		//double rf=0;
-		//double ic=0;
 		solution.setObjective(0, rf);
 		solution.setObjective(1, ic);
 		System.out.println("evaluationTimes "+evaluationTimes+": "+rf+", "+ic);
@@ -157,11 +155,16 @@ public class HbvOptimization extends AbstractProblem {
 	private double calculateRMSE(double[][] pairValues) {
 		double sum_sq = 0;
 		double err;
+		int validNum=0;
 		for (int i = 0; i < pairValues.length; ++i) {
+			if (pairValues[i][0]==0 && pairValues[i][1]==0) {
+				continue;
+			}
 			err = pairValues[i][0] - pairValues[i][1];
 			sum_sq += (err * err);
+			validNum++;
 		}
-		return (double) Math.sqrt(sum_sq / (pairValues.length));
+		return (double) Math.sqrt(sum_sq / validNum);
 	}
 
 	private Hashtable<String, Double> loadValues(String filename) throws NumberFormatException, IOException {

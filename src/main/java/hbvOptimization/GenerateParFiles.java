@@ -28,5 +28,6 @@ public class GenerateParFiles {
 		if (args.length<1)
 			return;
 		generateParFromParameters(args[0]);
+		System.out.println("done!");
 	}
 }
