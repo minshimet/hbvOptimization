@@ -65,7 +65,7 @@ public class HbvOptimization extends AbstractProblem {
 			}
 
 			br.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return parameters;
@@ -87,6 +87,8 @@ public class HbvOptimization extends AbstractProblem {
 		executeHbvModel();
 		double rf=evaluteRunOff();
 		double ic=evaluteIce();
+		//double rf=0;
+		//double ic=0;
 		solution.setObjective(0, rf);
 		solution.setObjective(1, ic);
 		System.out.println("evaluationTimes "+evaluationTimes+": "+rf+", "+ic);
@@ -100,7 +102,7 @@ public class HbvOptimization extends AbstractProblem {
 			String date;
 			Set<String> keys = iceMod.keySet();
 			Iterator<String> itr = keys.iterator();
-			double[][] pairs = new double[iceMod.size()][2];
+			double[][] pairs = new double[iceObs.size()][2];
 			int i = 0;
 			while (itr.hasNext()) {
 				date = itr.next();
@@ -110,17 +112,17 @@ public class HbvOptimization extends AbstractProblem {
 				String obsKey = date.substring(0, 4);
 				if (iceObs.get(obsKey) == null || iceObs.get(obsKey) == -9999 || iceMod.get(date) == -9999) {
 					// if no observation data found that set both same value
-					pairs[i][1] = iceMod.get(date);
-					pairs[i][0] = pairs[i][1];
 					continue;
 				} else {
 					pairs[i][1] = iceMod.get(date) / 1000;
 					pairs[i][0] = iceObs.get(obsKey);
+					i++;
 				}
-				i++;
+				
 			}
 			return calculateRMSE(pairs);
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			return 10000000;
 		}
 	}
@@ -138,17 +140,16 @@ public class HbvOptimization extends AbstractProblem {
 				date = itr.next();
 				if (runoffObs.get(date) == null || runoffObs.get(date) == -9999) {
 					// if no observation data found that set both same value
-					pairs[i][1] = runoffMod.get(date);
-					pairs[i][0] = pairs[i][1];
 					continue;
 				} else {
 					pairs[i][1] = runoffMod.get(date);
 					pairs[i][0] = runoffObs.get(date);
+					i++;
 				}
-				i++;
 			}
 			return calculateRMSE(pairs);
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			return 10000000;
 		}
 	}
