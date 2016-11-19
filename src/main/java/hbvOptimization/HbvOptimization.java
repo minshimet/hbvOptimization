@@ -24,6 +24,8 @@ public class HbvOptimization extends AbstractProblem {
 	String parFileFold;
 	String shellCommand;
 	String shell_command_calculate;
+	String output_runoff;
+	String output_ice;
 	int evaluationTimes = 0;
 
 	public HbvOptimization() {
@@ -36,14 +38,17 @@ public class HbvOptimization extends AbstractProblem {
 		runoff_model_file = p.getProperty("runoff_model_file");
 		ice_obs_file = p.getProperty("ice_obs_file");
 		ice_model_file = p.getProperty("ice_model_file");
-		hbvParameters = loadParameters(p.getProperty("parameter_file"));
+		hbvParameters = loadParameters(p.getProperty("parameter_range_file"));
 		tplFileFold = p.getProperty("tplfile_fold");
 		parFileFold = p.getProperty("target_parfile_fold");
 		shellCommand = p.getProperty("shell_command");
 		shell_command_calculate = p.getProperty("shell_command_calculate");
+		output_runoff = p.getProperty("output_runoff");
+		output_ice = p.getProperty("output_ice");
+
 	}
 
-	private static Hashtable<Integer, Parameter> loadParameters(String parafile) {
+	public static Hashtable<Integer, Parameter> loadParameters(String parafile) {
 		Hashtable<Integer, Parameter> parameters = new Hashtable<Integer, Parameter>();
 		try {
 			// Construct BufferedReader from FileReader
@@ -65,7 +70,7 @@ public class HbvOptimization extends AbstractProblem {
 			}
 
 			br.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return parameters;
@@ -76,31 +81,53 @@ public class HbvOptimization extends AbstractProblem {
 		double[] x = EncodingUtils.getReal(solution);
 		for (int i = 0; i < getNumberOfVariables(); i++) {
 			hbvParameters.get(i).setValue(x[i]);
-			System.out.print(x[i]+",");
+			System.out.print(x[i] + ",");
 		}
-		generateParfile("GeneralParametersDaily");
-		generateParfile("HbvSoilParameters");
-		generateParfile("LandSurfaceParameters");
-		//Remove old model file
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "GeneralParametersDaily");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "HbvSoilParameters");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "LandSurfaceParameters");
+		// Remove old model file
 		Utils.removeFile(runoff_model_file);
 		Utils.removeFile(ice_model_file);
 		executeHbvModel();
-		double rf=evaluteRunOff();
-		double ic=evaluteIce();
+		double rf = evaluteRunOff(false);
+		double ic = evaluteIce(false);
 		solution.setObjective(0, rf);
 		solution.setObjective(1, ic);
-		System.out.println("evaluationTimes "+evaluationTimes+": "+rf+", "+ic);
+		System.out.println("evaluationTimes " + evaluationTimes + ": " + rf + ", " + ic);
 		evaluationTimes++;
 	}
 
-	private double evaluteIce() {
+	public void evaluate(String[] values) {
+		for (int i = 0; i < values.length; i++) {
+			hbvParameters.get(i).setValue(Double.parseDouble(values[i]));
+		}
+//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "GeneralParametersDaily");
+//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "HbvSoilParameters");
+//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "LandSurfaceParameters");
+//		// Remove old model file
+//		Utils.removeFile(runoff_model_file);
+//		Utils.removeFile(ice_model_file);
+//		executeHbvModel();
+		try {
+			Utils.removeFile(output_runoff);
+			Utils.removeFile(output_ice);
+		} catch (Exception e) {
+			
+		}
+		double rf = evaluteRunOff(true);
+		double ic = evaluteIce(true);
+		System.out.println("RMSE RUNOFF: " + rf + " RMSE ICE: " + ic);
+	}
+
+	private double evaluteIce(boolean exportResult) {
 		try {
 			Hashtable<String, Double> iceObs = loadValues(ice_obs_file);
 			Hashtable<String, Double> iceMod = loadValues(ice_model_file);
 			String date;
 			Set<String> keys = iceMod.keySet();
 			Iterator<String> itr = keys.iterator();
-			double[][] pairs = new double[iceMod.size()][2];
+			double[][] pairs = new double[iceObs.size()][2];
 			int i = 0;
 			while (itr.hasNext()) {
 				date = itr.next();
@@ -110,22 +137,25 @@ public class HbvOptimization extends AbstractProblem {
 				String obsKey = date.substring(0, 4);
 				if (iceObs.get(obsKey) == null || iceObs.get(obsKey) == -9999 || iceMod.get(date) == -9999) {
 					// if no observation data found that set both same value
-					pairs[i][1] = iceMod.get(date);
-					pairs[i][0] = pairs[i][1];
 					continue;
 				} else {
 					pairs[i][1] = iceMod.get(date) / 1000;
 					pairs[i][0] = iceObs.get(obsKey);
+					if (exportResult) {
+						Utils.appendToFile(obsKey + " " + pairs[i][0] + " " + pairs[i][1], output_ice);
+					}
+					i++;
 				}
-				i++;
+
 			}
 			return calculateRMSE(pairs);
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			return 10000000;
 		}
 	}
 
-	private double evaluteRunOff() {
+	private double evaluteRunOff(boolean exportResult) {
 		try {
 			Hashtable<String, Double> runoffObs = loadValues(runoff_obs_file);
 			Hashtable<String, Double> runoffMod = loadValues(runoff_model_file);
@@ -138,17 +168,19 @@ public class HbvOptimization extends AbstractProblem {
 				date = itr.next();
 				if (runoffObs.get(date) == null || runoffObs.get(date) == -9999) {
 					// if no observation data found that set both same value
-					pairs[i][1] = runoffMod.get(date);
-					pairs[i][0] = pairs[i][1];
 					continue;
 				} else {
 					pairs[i][1] = runoffMod.get(date);
 					pairs[i][0] = runoffObs.get(date);
+					if (exportResult) {
+						Utils.appendToFile(date + " " + pairs[i][0] + " " + pairs[i][1], output_runoff);
+					}
+					i++;
 				}
-				i++;
 			}
 			return calculateRMSE(pairs);
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			return 10000000;
 		}
 	}
@@ -156,11 +188,16 @@ public class HbvOptimization extends AbstractProblem {
 	private double calculateRMSE(double[][] pairValues) {
 		double sum_sq = 0;
 		double err;
+		int validNum = 0;
 		for (int i = 0; i < pairValues.length; ++i) {
+			if (pairValues[i][0] == 0 && pairValues[i][1] == 0) {
+				continue;
+			}
 			err = pairValues[i][0] - pairValues[i][1];
 			sum_sq += (err * err);
+			validNum++;
 		}
-		return (double) Math.sqrt(sum_sq / (pairValues.length));
+		return (double) Math.sqrt(sum_sq / validNum);
 	}
 
 	private Hashtable<String, Double> loadValues(String filename) throws NumberFormatException, IOException {
@@ -204,7 +241,8 @@ public class HbvOptimization extends AbstractProblem {
 		}
 	}
 
-	private void generateParfile(String filename) {
+	public static void generateParfile(Hashtable<Integer, Parameter> hbvParameters, String tplFileFold,
+			String parFileFold, String filename) {
 		Utils.removeFile(parFileFold + filename + ".par");
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(tplFileFold + filename + ".tpl"));
