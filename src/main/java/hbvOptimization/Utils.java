@@ -73,4 +73,12 @@ public class Utils {
 			iox.printStackTrace();
 		}
 	}
+
+	public static boolean fileExist(String filePath) {
+		File f = new File(filePath);
+		if(f.exists() && !f.isDirectory()) { 
+		    return true;
+		}
+		return false;
+	}
 }

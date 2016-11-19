@@ -90,8 +90,12 @@ public class HbvOptimization extends AbstractProblem {
 		Utils.removeFile(runoff_model_file);
 		Utils.removeFile(ice_model_file);
 		executeHbvModel();
-		double rf = evaluteRunOff(false);
-		double ic = evaluteIce(false);
+		double ic =10000;
+		double rf =10000;
+		if (Utils.fileExist(ice_model_file)) {
+			ic = evaluteIce(false);
+			rf = evaluteRunOff(false);
+		}
 		solution.setObjective(0, rf);
 		solution.setObjective(1, ic);
 		System.out.println("evaluationTimes " + evaluationTimes + ": " + rf + ", " + ic);
@@ -102,19 +106,15 @@ public class HbvOptimization extends AbstractProblem {
 		for (int i = 0; i < values.length; i++) {
 			hbvParameters.get(i).setValue(Double.parseDouble(values[i]));
 		}
-//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "GeneralParametersDaily");
-//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "HbvSoilParameters");
-//		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "LandSurfaceParameters");
-//		// Remove old model file
-//		Utils.removeFile(runoff_model_file);
-//		Utils.removeFile(ice_model_file);
-//		executeHbvModel();
-		try {
-			Utils.removeFile(output_runoff);
-			Utils.removeFile(output_ice);
-		} catch (Exception e) {
-			
-		}
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "GeneralParametersDaily");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "HbvSoilParameters");
+		generateParfile(hbvParameters, this.tplFileFold, this.parFileFold, "LandSurfaceParameters");
+		// Remove old model file
+		Utils.removeFile(runoff_model_file);
+		Utils.removeFile(ice_model_file);
+		executeHbvModel();
+		Utils.removeFile(output_runoff);
+		Utils.removeFile(output_ice);
 		double rf = evaluteRunOff(true);
 		double ic = evaluteIce(true);
 		System.out.println("RMSE RUNOFF: " + rf + " RMSE ICE: " + ic);
