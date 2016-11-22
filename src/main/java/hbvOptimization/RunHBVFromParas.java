@@ -7,17 +7,17 @@ import java.util.Properties;
 
 public class RunHBVFromParas {
 	
-	public static void runHBVFromParameters(String paras) throws FileNotFoundException, IOException {
+	public static void runHBVFromParameters(String propertiesFile, String paras) throws FileNotFoundException, IOException {
 		
 		String[] values=paras.split(",");
-		HbvOptimization hbvOptimization=new HbvOptimization();
+		HbvOptimization hbvOptimization=new HbvOptimization(propertiesFile);
 		hbvOptimization.evaluate(values);
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		if (args.length<1)
+		if (args.length<2)
 			return;
-		runHBVFromParameters(args[0]);
+		runHBVFromParameters(args[0],args[1]);
 		System.out.println("done!");
 	}
 }

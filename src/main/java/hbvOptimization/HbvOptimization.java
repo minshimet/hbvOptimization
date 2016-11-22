@@ -28,11 +28,12 @@ public class HbvOptimization extends AbstractProblem {
 	String output_ice;
 	int evaluationTimes = 0;
 
-	public HbvOptimization() {
+	public HbvOptimization(String propertiesFile) {
 		super(14, 2);
-		Properties p = Utils.loadProperties("/home/ubuntu/lihong/hbv.properties");
-		if (p == null)
+		Properties p = Utils.loadProperties(propertiesFile);
+		if (p == null) {
 			System.exit(1);
+		}
 
 		runoff_obs_file = p.getProperty("runoff_obs_file");
 		runoff_model_file = p.getProperty("runoff_model_file");
