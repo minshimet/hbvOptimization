@@ -27,6 +27,7 @@ public class HbvOptimization extends AbstractProblem {
 	String output_runoff;
 	String output_ice;
 	int evaluationTimes = 0;
+	int popNum=0;
 
 	public HbvOptimization(String propertiesFile) {
 		super(14, 2);
@@ -80,6 +81,7 @@ public class HbvOptimization extends AbstractProblem {
 	@Override
 	public void evaluate(Solution solution) {
 		double[] x = EncodingUtils.getReal(solution);
+		System.out.print("evaluate solution: ");
 		for (int i = 0; i < getNumberOfVariables(); i++) {
 			hbvParameters.get(i).setValue(x[i]);
 			System.out.print(x[i] + ",");
@@ -272,7 +274,7 @@ public class HbvOptimization extends AbstractProblem {
 			solution.setVariable(i,
 					new RealVariable(hbvParameters.get(i).getLowBound(), hbvParameters.get(i).getUpBound()));
 		}
-
+		System.out.println("new solution: "+popNum++);
 		return solution;
 	}
 }
