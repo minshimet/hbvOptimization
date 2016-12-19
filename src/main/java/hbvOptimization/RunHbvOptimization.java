@@ -24,6 +24,9 @@ public class RunHbvOptimization {
 		evalutationTimes = Integer.parseInt(p.getProperty("evaluation_times"));
 		Executor executor=new Executor().withAlgorithm(algorithm).withProblemClass(HbvOptimization.class,args[0])
 				.withMaxEvaluations(evalutationTimes).distributeOnAllCores();
+		if (p.getProperty("distribute_cores").equalsIgnoreCase("true")) {
+			executor.distributeOnAllCores();
+		}
 		String algorithmProperties[]=p.getProperty("algorithm_properties").split(",");
 		for (String property:algorithmProperties) {
 			String[] token=property.split("=");
