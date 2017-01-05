@@ -28,9 +28,11 @@ public class HbvOptimization extends AbstractProblem {
 	String output_ice;
 	int evaluationTimes = 0;
 	int popNum=0;
+	int object=0;
+	String sObject;
 
 	public HbvOptimization(String propertiesFile) {
-		super(14, 2);
+		super(14, Utils.loadProperties(propertiesFile).get("single_object").equals("true")?1:2);
 		Properties p = Utils.loadProperties(propertiesFile);
 		if (p == null) {
 			System.exit(1);
@@ -47,6 +49,8 @@ public class HbvOptimization extends AbstractProblem {
 		shell_command_calculate = p.getProperty("shell_command_calculate");
 		output_runoff = p.getProperty("output_runoff");
 		output_ice = p.getProperty("output_ice");
+		object=Utils.loadProperties(propertiesFile).get("single_object").equals("true")?1:2;
+		sObject=p.getProperty("object");
 
 	}
 
@@ -99,8 +103,16 @@ public class HbvOptimization extends AbstractProblem {
 			ic = evaluteIce(false);
 			rf = evaluteRunOff(false);
 		}
-		solution.setObjective(0, rf);
-		solution.setObjective(1, ic);
+		if (object==1) {
+			if (sObject.equalsIgnoreCase("ice")) {
+				solution.setObjective(0, ic);
+			} else {
+				solution.setObjective(0, rf);
+			}
+		} else {
+			solution.setObjective(0, rf);
+			solution.setObjective(1, ic);
+		}
 		System.out.println("evaluationTimes " + evaluationTimes + ": " + rf + ", " + ic);
 		evaluationTimes++;
 	}

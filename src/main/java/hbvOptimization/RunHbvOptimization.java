@@ -37,7 +37,7 @@ public class RunHbvOptimization {
 		NondominatedPopulation result = executor.run();
 		for (Solution solution : result) {
 			System.out.printf("%.5f => %.5f, %.5f\n", EncodingUtils.getReal(solution.getVariable(0)),
-					solution.getObjective(0), solution.getObjective(1));
+					solution.getObjective(0), solution.getNumberOfObjectives()==1?0:solution.getObjective(1));
 		}
 
 		//new Plot().add("NSGAII", result).show();
